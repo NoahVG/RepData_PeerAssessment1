@@ -31,24 +31,19 @@ dates <- group_by(data, date)
 steps <- summarise(dates, meansteps=mean(steps, na.rm=TRUE),
                         totalsteps = sum(steps, na.rm=TRUE), 
                         mediansteps=median(steps, na.rm=TRUE))
-steps
+mean(data$steps, na.rm=TRUE)
 ```
 
 ```
-## Source: local data frame [61 x 4]
-## 
-##          date meansteps totalsteps mediansteps
-## 1  2012-10-01       NaN          0          NA
-## 2  2012-10-02   0.43750        126           0
-## 3  2012-10-03  39.41667      11352           0
-## 4  2012-10-04  42.06944      12116           0
-## 5  2012-10-05  46.15972      13294           0
-## 6  2012-10-06  53.54167      15420           0
-## 7  2012-10-07  38.24653      11015           0
-## 8  2012-10-08       NaN          0          NA
-## 9  2012-10-09  44.48264      12811           0
-## 10 2012-10-10  34.37500       9900           0
-## ..        ...       ...        ...         ...
+## [1] 37.3826
+```
+
+```r
+median(data$steps, na.rm=TRUE)
+```
+
+```
+## [1] 0
 ```
 creates histogram
 
