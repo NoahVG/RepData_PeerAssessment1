@@ -1,25 +1,98 @@
 ---
-title: "Reproducible Research: Peer Assessment 1"
-output: 
+title: "Reproducible Research - Project 1"
+output:
   html_document:
-    keep_md: true
+    keep_md: yes
 ---
 
+Opens file, loads dplyr package
+```{r}
+data <- read.csv("C:/Users/Noah/Documents/Coursera/Reproducable research/project 1/activity.csv")
+library(dplyr)
+```
 
-## Loading and preprocessing the data
+splits data by date, gets sum/mean/median no of steps
+```{r}
+dates <- group_by(data, date)
+steps <- summarise(dates, meansteps=mean(steps, na.rm=TRUE),
+                        totalsteps = sum(steps, na.rm=TRUE), 
+                        mediansteps=median(steps, na.rm=TRUE))
+steps
+```
+creates histogram
+```{r}
+hist(steps$totalsteps, breaks = 11, main = "Total steps/day",xaxt="n")
+axis (side=1, at=seq(0,22000,2000), labels = seq(0,22000,2000))
+```
+splits data by interval,finds interval with highest avg
+```{r}
+interval <- group_by(data, interval)
+stepsinterval <- summarise(interval, meansteps=mean(steps, na.rm=TRUE))
+max <- which.max(stepsinterval$meansteps)
+maxinterval<-stepsinterval[max,1]
+print(paste0("the interval with highest average number of steps is ",maxinterval))
+```
+creates time series plot
+```{r}
+library(ggplot2)
+ggplot(stepsinterval, aes(interval, meansteps)) + geom_line() + scale_x_continuous(breaks=seq(0,2500, 100))
+```
+find n/as in steps var
+```{r}
+NAvals <- is.na(data$steps)
+table(NAvals)
+```
 
+find avg steps for each interval
+```{r}
+data2 <- data
+data2$avg <- tapply(data2$steps, data2$interval, mean,na.rm=TRUE)
+```
 
+replace nas with avg steps
+all values in newsteps var. that are N/As are replaced with the corresponding value in that row of the avg. variable
+```{r}
+data2$newsteps <- data2$steps
+data2$newsteps[is.na(data2$newsteps)] = data2$avg[is.na(data2$newsteps)]
+```
 
-## What is mean total number of steps taken per day?
+splits data (that now has no NAs) by date,gets sum/mean/median no of steps
+```{r}
+datesnoNA <- group_by(data2, date)
+stepsnoNA <- summarise(datesnoNA, meansteps_noNA=mean(newsteps, na.rm=TRUE),
+                   totalsteps_noNA = sum(newsteps, na.rm=TRUE), 
+                   mediansteps_noNA=median(newsteps, na.rm=TRUE))
+stepsnoNA
+```
+creates histogram
+```{r}
+hist(stepsnoNA$totalsteps, breaks = 11, main = "Total steps/day",xaxt="n")
+axis (side=1, at=seq(0,22000,2000), labels = seq(0,22000,2000))
+```
 
+compares steps w/ and w/o NAs
+```{r}
+stepscompare <- cbind(steps, stepsnoNA[,2:4])
+head(stepscompare)
+```
 
+formats dates as date format
+if weekday is sat or sun, var is weekend, else its weekday
+```{r}
+data2$date <- as.Date(data2$date)
+data2$weekdays <- weekdays(data2$date)
+data2$day <- ifelse((data2$weekdays == "Saturday" | data2$weekdays == "Sunday"), "weekend", "weekday")
+```
+converts to factor
+```{r}
+data2$day <- as.factor(data2$day)
+```
 
-## What is the average daily activity pattern?
-
-
-
-## Imputing missing values
-
-
-
-## Are there differences in activity patterns between weekdays and weekends?
+creates time plot
+```{r}
+weekend_day <- group_by(data2, interval,day)
+stepsintervalday <- summarise(weekend_day, meansteps=mean(newsteps, na.rm=TRUE))
+graph <-ggplot(stepsintervalday, aes(interval, meansteps)) + 
+    geom_line() + scale_x_continuous(breaks=seq(0,2500, 100)) 
+graph + facet_wrap(~day, ncol=1)
+```
